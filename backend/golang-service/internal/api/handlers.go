@@ -105,7 +105,22 @@ func GetAzureCloudCosts(c *fiber.Ctx) error {
 
 // GetAlibabaCloudCosts fetches Alibaba cost data
 func GetAlibabaCloudCosts(c *fiber.Ctx) error {
-	costs, err := alibaba.FetchAlibabaCloudCosts()
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+
+	if startDate == "" || endDate == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "start_date and end_date query parameters are required"})
+	}
+
+	if err := validateDateFormat(startDate); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid start_date format, expected YYYY-MM-DD"})
+	}
+
+	if err := validateDateFormat(endDate); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid end_date format, expected YYYY-MM-DD"})
+	}
+
+	costs, err := alibaba.FetchAlibabaCloudCosts(startDate, endDate)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
